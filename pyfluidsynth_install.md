@@ -6,9 +6,22 @@ $ sudo port selfupdate
 $ sudo port install fluidsynth
 $ sudo port install generaluser-soundfont
 ```
-  
 generaluser-soundfontは`/opt/local/share/sounds/sf2/`に配置されている  
-プロジェクトがactivateされている状態で`pip install pyfluidsynth`
+  
+Ubuntu:  
+```
+$ cd ~
+$ apt-get install -y fluidsynth zip unzip
+wget https://www.dropbox.com/s/4x27l49kxcwamp5/GeneralUser_GS_1.471.zip
+$ unzip GeneralUser_GS_1.471.zip
+$ rm GeneralUser_GS_1.471.zip
+$ mv 'GeneralUser GS 1.471' gsfont
+$ mv gsfont/'GeneralUser GS v1.471.sf2' gsfont/gsfont.sf2
+```
+サウンドフォントは`~/gsfont/gsfont.sf2`に配置されている  
+  
+以下共通  
+プロジェクトがactivateされている状態で`pip install pyfluidsynth`  
 `/.venv/lib/python3.7/site-packages/fluidsynth.py`を編集  
 以下の関数をコメントアウト
 - fluid_synth_get_channel_info 
@@ -17,11 +30,12 @@ generaluser-soundfontは`/opt/local/share/sounds/sf2/`に配置されている
 - fluid_synth_get_chorus_speed_Hz
 - fluid_synth_get_chorus_depth_ms
 - fluid_synth_set_midi_router
-
+  
 これにて，fluidsynthを使用できる
 ```
 import fluidsynth
 dir(fluidsynth)
+# 関数とかが色々出てくる
 ```
   
   
