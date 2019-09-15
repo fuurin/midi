@@ -206,6 +206,7 @@ def in_scale_rate(pm, key_number, fs=100, vel_thresh=0):
 
 def in_scale_rates(pm, key_changes=None, index=None, vel_thresh=0):
     key_changes = key_changes or pm.key_signature_changes or [KeySignature(0, 0.0)]
+    key_changes = [kc for kc in key_changes]
     key_changes.append(KeySignature(key_changes[-1].key_number, pm.get_end_time() + 1.0))
     sections = divide(pm, [kc.time for kc in key_changes], index=index, exclude_drum=True)
     sect_keys = zip(sections, [kc.key_number for kc in key_changes])
