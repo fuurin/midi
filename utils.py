@@ -1,6 +1,9 @@
 import numpy as np
 import pretty_midi
 from pretty_midi import PrettyMIDI, TimeSignature, KeySignature
+from pypianoroll import Multitrack, Track
+import matplotlib.pyplot as plt
+from pylab import rcParams
 
 
 """
@@ -213,6 +216,78 @@ def in_scale_rates(pm, key_changes=None, index=None, vel_thresh=0):
     scale_rates = [in_scale_rate(sect, key) for sect, key in sect_keys]
     return scale_rates
 
+def grid_plot(ppr, 
+        bar_range=None, pitch_range='auto', 
+        beats_in_bar=4, beat_resolution=24, 
+        show_white_key_ticks=False, figsize=[21, 10]
+    ):
+    """
+    pretty ploting for pypianoroll
+    """
+    orgSize = rcParams['figure.figsize']
+    rcParams['figure.figsize'] = figsize
+    
+    if isinstance(ppr, Track):
+        downbeat = list(range(ppr.pianoroll.shape[0]))
+        ppr = Multitrack(tracks=[ppr], downbeat=downbeat, beat_resolution=beat_resolution)
+    
+    beat_res = ppr.beat_resolution
+    bar_res = beats_in_bar * beat_res
+    downbeat = ppr.downbeat
+    ppr.downbeat = np.zeros_like(ppr.downbeat, dtype=bool)
+    
+    major_scale = [0, 2, 4, 5, 7, 9, 11]
+    major_scale_name = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    major_color = ['red', 'orange', 'yellow', 'green', 'cyan', 'mediumblue', 'magenta']
+    major = list(zip(major_scale, major_color))
+    
+    fig, axs = ppr.plot(xtick="beat")
+    for a, ax in enumerate(axs):
+        ax.grid(False)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_xticklabels([], minor=True)
+        ax.set_xticklabels(range(len(ppr.downbeat) // beat_res), minor=False)
+        
+        # pretty_midiに合わせてC-1を0とする
+        if show_white_key_ticks:
+            ax.set_yticks([k+12*i for i in range(11) for k in major_scale][:75])
+            ax.set_yticklabels([k+str(i-1) for i in range(11) for k in major_scale_name][:75])
+        else:
+            ax.set_yticklabels([f'C{i - 1}' for i in range(11)])
+        
+        xlim = ax.get_xlim()
+        if bar_range:
+            xlim = (bar_range[0] * bar_res, bar_range[1] * bar_res - 0.5)
+        ax.set_xlim(*xlim)
+        
+        if pitch_range == 'auto':
+            try:
+                low, high = ppr.tracks[a].get_active_pitch_range()
+            except ValueError:
+                low, high = 66, 66
+            ax.set_ylim(max(0, low - 6), min(high + 6, 127))
+        elif pitch_range:
+            pr = np.array(pitch_range)
+            if pr.ndim == 1:
+                ax.set_ylim(pr[0], pr[1])
+            elif pr.ndim == 2:
+                ax.set_ylim(pr[a][0], pr[a][1])
+        ylim = ax.get_ylim()
+                
+        for bar_step in range(int(xlim[0]), int(xlim[1])+1, bar_res):
+            ax.vlines(bar_step - 0.5, 0, 127)
+            for beat in range(1, 4):
+                ax.vlines(bar_step + beat_res * beat - 0.5, 0, 127, linestyles='dashed')
+
+        for k, color in major:
+            linewidth = 2.0 if k == 0 else 1.0
+            for h in range(int(ylim[0]), int(ylim[1])):
+                if h % 12 == k:
+                    ax.hlines(h, xlim[0], xlim[1], linestyles='-', linewidth=linewidth, color=color)
+    
+    ppr.downbeat = downbeat
+    
+    rcParams['figure.figsize'] = orgSize
 
 if __name__ == "__main__":
     # Test
