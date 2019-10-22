@@ -289,6 +289,33 @@ def grid_plot(ppr,
     
     rcParams['figure.figsize'] = orgSize
 
+import time
+class Timer():
+    """
+    with Timer():
+        # 計測したい処理
+        # 約 1/100000 [sec] だけこいつを使った方が遅くなることに注意
+    
+    with Timer(fmt="endtime: {:f}"):
+        # 計測したい処理
+        # このようにformatを指定することもできる
+    
+    """
+    def __init__(self, fmt='{:f}'):
+        self.fmt = fmt
+    
+    def get_time():
+        return time.time() - self.start
+    
+    def __enter__(self):
+        self.start = time.time()
+        return self
+    
+    def __exit__(self, _1, _2, _3):
+        end = time.time() - self.start
+        print(self.fmt.format(end))
+
+
 if __name__ == "__main__":
     # Test
     resolution = 24
