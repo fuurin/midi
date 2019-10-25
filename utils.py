@@ -1,7 +1,9 @@
+import platform
 import numpy as np
 import pretty_midi
 from pretty_midi import PrettyMIDI, TimeSignature, KeySignature
 from pypianoroll import Multitrack, Track
+from scipy.io import wavfile as spw
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
@@ -314,6 +316,36 @@ class Timer():
     def __exit__(self, _1, _2, _3):
         end = time.time() - self.start
         print(self.fmt.format(end))
+
+
+def soundfont():
+    soundfont = ""
+    
+    pf = platform.system()
+    
+    # ubuntu
+    if pf == 'Linux':
+        soundfont = "../gsfont/gsfont.sf2"
+
+    # mac
+    if pf == 'Darwin':
+        soundfont = "./data/GeneralUser_GS_v1.471.sf2"
+    
+    return soundfont
+
+def pm_to_wave(pm, wave_file_name, sf_path=None, fs=44100):
+    
+    if sf_path is None:
+        sf_path = soundfont()
+
+    audio = pm.fluidsynth(fs, sf_path)
+    
+    # 16bit=2byte符号付き整数に変換してノーマライズ [-32768  ~ 32767]
+    audio = np.array(audio * 32767.0, dtype="int16") # floatだと情報量が多くなる
+    audio_stereo = np.c_[audio, audio] # ステレオ化
+    spw.write(wave_file_name, fs, audio_stereo) # 書き出し
+    
+    return audio
 
 
 if __name__ == "__main__":
